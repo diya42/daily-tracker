@@ -895,7 +895,12 @@
                             <label>Confirm Password</label>
                             <input type="password" placeholder="Confirm your password" class="auth-input">
                         </div>
-                        
+                        <div class="input-group">
+    <label>Age</label>
+    <input type="number" placeholder="Enter your age" class="auth-input" min="13" max="120">
+</div>
+
+
                         <div class="profile-setup">
                             <h4>Optional Profile Setup</h4>
                             <div class="profile-row">
@@ -904,15 +909,16 @@
                                     <input type="number" placeholder="25" class="auth-input">
                                 </div>
                                 <div class="input-group half">
-                                    <label>Gender</label>
-                                    <select class="auth-input">
-                                        <option value="">Select</option>
-                                        <option value="male">Male</option>
-                                        <option value="female">Female</option>
-                                        <option value="other">Other</option>
-                                        <option value="prefer-not-to-say">Prefer not to say</option>
-                                    </select>
-                                </div>
+    <label>Gender</label>
+    <select name="gender" class="auth-input">
+        <option value="">Select</option>
+        <option value="male">Male</option>
+        <option value="female">Female</option>
+        <option value="other">Other</option>
+        <option value="prefer-not-to-say">Prefer not to say</option>
+    </select>
+</div>
+
                             </div>
                         </div>
                         
@@ -1255,19 +1261,25 @@ async function login() {
         alert("Login failed: " + data.detail);
     }
 }
-
 async function signup() {
     const name = document.querySelector('#signup-form input[placeholder="Enter your full name"]').value;
     const email = document.querySelector('#signup-form input[placeholder="Enter your email"]').value;
     const password = document.querySelector('#signup-form input[placeholder="Create a password"]').value;
-    const age = parseInt(document.querySelector('#signup-form input[placeholder="Enter your age"]')?.value) || null;
-    const gender = document.querySelector('#signup-form input[placeholder="Enter your gender"]')?.value || null;
+    const ageInput = document.querySelector('#signup-form input[placeholder="Enter your age"]')?.value;
+    const age = ageInput ? parseInt(ageInput) : null;
+    const gender = document.querySelector('#signup-form select')?.value || null;
 
     try {
-        const response = await fetch("https://daily-tracker-hslo.onrender.com/signup", {
+        const response = await fetch("https://daily-tracker-hslo.onrender.com/auth/register", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name, email, password, age, gender })
+            body: JSON.stringify({
+                name,
+                email,
+                password,
+                age,
+                gender
+            })
         });
 
         const data = await response.json();
@@ -1276,12 +1288,18 @@ async function signup() {
             alert("Signup successful! Now login.");
             showScreen("auth");
         } else {
-            alert("Signup failed: " + (data.detail || JSON.stringify(data)));
+            let errorMsg = typeof data.detail === 'string'
+                ? data.detail
+                : JSON.stringify(data.detail || data);
+
+            alert("Signup failed: " + errorMsg);
         }
     } catch (err) {
         alert("Signup failed: " + err.message);
     }
 }
+
+
 
 
 function socialLogin(provider) {
