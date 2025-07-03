@@ -1208,28 +1208,41 @@
         // ✅ Fix: tabNav safely handled even if DOM not ready yet
         let tabNav = document.querySelector('.tab-nav');
         if (!tabNav) {
-            document.addEventListener("DOMContentLoaded", () => {
-                tabNav = document.querySelector('.tab-nav');
-                if (screenName === 'dashboard' || screenName === 'trends') {
-                    tabNav.style.display = 'flex';
-                } else {
-                    tabNav.style.display = 'none';
-                }
-            });
-        } else {
+            document.addEventListener("DOMContentLoaded", function () {
+    setTimeout(() => {
+        showScreen("auth");
+    }, 3000);
+});
+
+function showScreen(screenName) {
+    document.querySelectorAll('.screen').forEach(screen => screen.classList.remove('active'));
+    const screenEl = document.getElementById(screenName);
+    if (screenEl) screenEl.classList.add('active');
+
+    // Safe tabNav logic
+    let tabNav = document.querySelector('.tab-nav');
+    if (!tabNav) {
+        document.addEventListener("DOMContentLoaded", () => {
+            tabNav = document.querySelector('.tab-nav');
             if (screenName === 'dashboard' || screenName === 'trends') {
                 tabNav.style.display = 'flex';
             } else {
                 tabNav.style.display = 'none';
             }
-        }
-
-        currentScreen = screenName;
-        if (screenName === "dashboard") {
-            loadLogs();  // <-- This fetches and updates dashboard cards
+        });
+    } else {
+        if (screenName === 'dashboard' || screenName === 'trends') {
+            tabNav.style.display = 'flex';
+        } else {
+            tabNav.style.display = 'none';
         }
     }
 
+    currentScreen = screenName;
+    if (screenName === "dashboard") {
+        loadLogs();
+    }
+}
     function switchAuthTab(tabName) {
         currentAuthTab = tabName;
         document.querySelectorAll('.auth-tab').forEach(tab => tab.classList.remove('active'));
