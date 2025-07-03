@@ -1272,7 +1272,8 @@ async function signup() {
         showScreen("auth");
     } else {
         const data = await response.json();
-        alert("Signup failed: " + data.detail);
+        alert("Signup failed: " + (data.detail || JSON.stringify(data)));
+
     }
 }
 
