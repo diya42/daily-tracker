@@ -1213,16 +1213,16 @@
         showScreen("auth");
     }, 3000);
 });
-
 function showScreen(screenName) {
     document.querySelectorAll('.screen').forEach(screen => screen.classList.remove('active'));
     const screenEl = document.getElementById(screenName);
     if (screenEl) screenEl.classList.add('active');
 
-    // Safe tabNav logic
+    // ✅ Declare once at the top
     let tabNav = document.querySelector('.tab-nav');
     if (!tabNav) {
         document.addEventListener("DOMContentLoaded", () => {
+            // ✅ Don't redeclare — just assign
             tabNav = document.querySelector('.tab-nav');
             if (screenName === 'dashboard' || screenName === 'trends') {
                 tabNav.style.display = 'flex';
@@ -1243,6 +1243,7 @@ function showScreen(screenName) {
         loadLogs();
     }
 }
+
     function switchAuthTab(tabName) {
         currentAuthTab = tabName;
         document.querySelectorAll('.auth-tab').forEach(tab => tab.classList.remove('active'));
