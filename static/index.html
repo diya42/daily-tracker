@@ -1196,292 +1196,188 @@
     </div>
     
     <script>
-        let currentScreen = 'splash';
-        let selectedMood = 3;
-        let currentAuthTab = 'login';
-        
-        // Initialize app
-        document.addEventListener('DOMContentLoaded', function() {
-            // Simulate splash screen loading
-            setTimeout(() => {
-                showScreen('auth');
-            }, 3000);
-        });
-        
-        function showScreen(screenName) {
-            // Hide all screens
-            document.querySelectorAll('.screen').forEach(screen => {
-                screen.classList.remove('active');
-            });
-            
-            // Show selected screen
-            document.getElementById(screenName).classList.add('active');
-            
-            // Update tab buttons only if we're in main app screens
-            if (['dashboard', 'trends', 'user-stories'].includes(screenName)) {
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    if (event && event.target) {
-        event.target.classList.add('active');
-    }
-    tabNav.style.display = 'flex';
-} else {
-    tabNav.style.display = 'none';
-}
+    let currentScreen = 'splash';
+    let selectedMood = 3;
+    let currentAuthTab = 'login';
 
-            
-            // Show/hide tab navigation
-            const tabNav = document.querySelector('.tab-nav');
+    function showScreen(screenName) {
+        document.querySelectorAll('.screen').forEach(screen => screen.classList.remove('active'));
+        const screenEl = document.getElementById(screenName);
+        if (screenEl) screenEl.classList.add('active');
+
+        // ✅ Fix: tabNav safely handled even if DOM not ready yet
+        let tabNav = document.querySelector('.tab-nav');
+        if (!tabNav) {
+            document.addEventListener("DOMContentLoaded", () => {
+                tabNav = document.querySelector('.tab-nav');
+                if (screenName === 'dashboard' || screenName === 'trends') {
+                    tabNav.style.display = 'flex';
+                } else {
+                    tabNav.style.display = 'none';
+                }
+            });
+        } else {
             if (screenName === 'dashboard' || screenName === 'trends') {
                 tabNav.style.display = 'flex';
             } else {
                 tabNav.style.display = 'none';
             }
-            
-            currentScreen = screenName;
-             if (screenName === "dashboard") {
-        loadLogs();  // <-- This fetches and updates dashboard cards
+        }
+
+        currentScreen = screenName;
+        if (screenName === "dashboard") {
+            loadLogs();  // <-- This fetches and updates dashboard cards
+        }
     }
 
-        }
-        
-        function switchAuthTab(tabName) {
-            currentAuthTab = tabName;
-            
-            // Update tab buttons
-            document.querySelectorAll('.auth-tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            event.target.classList.add('active');
-            
-            // Show/hide forms
-            document.getElementById('login-form').classList.toggle('hidden', tabName !== 'login');
-            document.getElementById('signup-form').classList.toggle('hidden', tabName !== 'signup');
-        }
-        
-        async function login() {
-    const email = document.querySelector('#login-form input[placeholder="Enter your email"]').value;
-    const password = document.querySelector('#login-form input[placeholder="Enter your password"]').value;
+    function switchAuthTab(tabName) {
+        currentAuthTab = tabName;
+        document.querySelectorAll('.auth-tab').forEach(tab => tab.classList.remove('active'));
+        event.target.classList.add('active');
 
-    const response = await fetch("http://127.0.0.1:8000/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, name: "dummy" }) // name is required in model
-    });
-
-    if (response.ok) {
-        alert("Login successful!");
-        localStorage.setItem("userEmail", email);
-        showScreen("dashboard");
-    } else {
-        const data = await response.json();
-        alert("Login failed: " + data.detail);
+        document.getElementById('login-form').classList.toggle('hidden', tabName !== 'login');
+        document.getElementById('signup-form').classList.toggle('hidden', tabName !== 'signup');
     }
-}
 
-        
-        async function signup() {
-    const name = document.querySelector('#signup-form input[placeholder="Enter your full name"]').value;
-    const email = document.querySelector('#signup-form input[placeholder="Enter your email"]').value;
-    const password = document.querySelector('#signup-form input[placeholder="Create a password"]').value;
+    async function login() {
+        const email = document.querySelector('#login-form input[placeholder="Enter your email"]').value;
+        const password = document.querySelector('#login-form input[placeholder="Enter your password"]').value;
 
-    const response = await fetch("http://127.0.0.1:8000/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password })
-    });
-
-    if (response.ok) {
-        alert("Signup successful! Now login.");
-        showScreen("auth"); // stay on auth screen
-    } else {
-        const data = await response.json();
-        alert("Signup failed: " + data.detail);
-    }
-}
-
-        
-        function socialLogin(provider) {
-            const btn = event.target;
-            const originalText = btn.innerHTML;
-            btn.innerHTML = `<span>Connecting...</span>`;
-            btn.style.opacity = '0.7';
-            
-            setTimeout(() => {
-                btn.innerHTML = `<span>✓ Connected!</span>`;
-                btn.style.borderColor = '#28a745';
-                btn.style.color = '#28a745';
-                setTimeout(() => {
-                    showScreen('dashboard');
-                    // Reset button
-                    btn.innerHTML = originalText;
-                    btn.style.opacity = '1';
-                    btn.style.borderColor = '#e9ecef';
-                    btn.style.color = provider === 'google' ? '#4285f4' : '#000';
-                }, 1000);
-            }, 1500);
-        }
-        
-        function openCategory(categoryName) {
-            const categories = {
-                'sleep': { icon: '😴', title: 'Sleep', desc: 'Log your sleep duration and quality' },
-                'exercise': { icon: '💪', title: 'Physical Exercise', desc: 'Track your workout sessions' },
-                'nutrition': { icon: '🍎', title: 'Nutrition', desc: 'Log your meals and water intake' },
-                'work': { icon: '💼', title: 'Work & Productivity', desc: 'Track your work hours and tasks' },
-                'personal': { icon: '🧴', title: 'Personal Care', desc: 'Log hygiene and self-care activities' },
-                'social': { icon: '👥', title: 'Social & Leisure', desc: 'Time spent with friends and hobbies' },
-                'household': { icon: '🏠', title: 'Household Tasks', desc: 'Cleaning, errands, and maintenance' },
-                'mindfulness': { icon: '🧘', title: 'Mindfulness', desc: 'Meditation and mental well-being' },
-                'transport': { icon: '🚗', title: 'Transportation', desc: 'Commute and travel time' },
-                'learning': { icon: '📚', title: 'Learning', desc: 'Study time and skill development' }
-            };
-            
-            const category = categories[categoryName];
-            if (category) {
-                document.getElementById('input-icon').textContent = category.icon;
-                document.getElementById('input-title').textContent = category.title;
-                showScreen('input');
-            }
-        }
-        
-        async function saveEntry() {
-    const email = localStorage.getItem("userEmail");
-    const category = document.getElementById('input-title').textContent;
-    const hours = parseInt(document.getElementById('hours').value) || 0;
-    const minutes = parseInt(document.getElementById('minutes').value) || 0;
-    const duration_minutes = hours * 60 + minutes;
-    const notes = document.querySelector('.notes-input').value;
-    const mood = document.querySelector('.mood-emoji.selected')?.textContent;
-    const date = new Date().toISOString().slice(0, 10); // 'YYYY-MM-DD'
-
-    const response = await fetch("http://127.0.0.1:8000/log", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, category, duration_minutes, notes, mood, date })
-    });
-
-    if (response.ok) {
-        alert("Activity saved!");
-        showScreen("dashboard");
-    } else {
-        const data = await response.json();
-        alert("Error saving entry: " + data.detail);
-    }
-}
-
-async function loadLogs() {
-    const email = localStorage.getItem("userEmail");
-    const date = new Date().toISOString().slice(0, 10);
-
-    const response = await fetch(`http://127.0.0.1:8000/logs/${email}/${date}`);
-    const data = await response.json();
-
-    console.log("Today's Logs:", data.logs);
-}
-
-
-
-        
-        function changeDate(direction) {
-            const dateSpan = document.querySelector('.current-date');
-            // Simulate date change
-            if (direction > 0) {
-                dateSpan.textContent = 'Tomorrow, June 17';
-            } else {
-                dateSpan.textContent = 'Yesterday, June 15';
-            }
-        }
-        
-        // Mood selection
-        document.querySelectorAll('.mood-emoji').forEach((emoji, index) => {
-            emoji.addEventListener('click', () => {
-                document.querySelectorAll('.mood-emoji').forEach(e => e.classList.remove('selected'));
-                emoji.classList.add('selected');
-                selectedMood = index;
-            });
-        });
-        
-        // Duration slider sync
-        document.querySelector('.duration-slider').addEventListener('input', (e) => {
-            const totalMinutes = parseInt(e.target.value);
-            const hours = Math.floor(totalMinutes / 60);
-            const minutes = totalMinutes % 60;
-            document.getElementById('hours').value = hours;
-            document.getElementById('minutes').value = minutes;
-        });
-        
-        // Add some interactive animations
-        document.querySelectorAll('.category-card').forEach(card => {
-            card.addEventListener('mouseenter', () => {
-                card.style.transform = 'translateY(-4px) scale(1.02)';
-            });
-            card.addEventListener('mouseleave', () => {
-                card.style.transform = 'translateY(0) scale(1)';
-            });
-        });
-        
-        // Auto-focus first input in auth forms
-        function focusFirstInput() {
-            setTimeout(() => {
-                const firstInput = document.querySelector('.auth-form:not(.hidden) .auth-input');
-                if (firstInput) firstInput.focus();
-            }, 100);
-        }
-        
-        // Add form validation
-        function validateForm(formType) {
-            const form = document.getElementById(formType + '-form');
-            const inputs = form.querySelectorAll('.auth-input[required]');
-            let isValid = true;
-            
-            inputs.forEach(input => {
-                if (!input.value.trim()) {
-                    input.style.borderColor = '#dc3545';
-                    isValid = false;
-                } else {
-                    input.style.borderColor = '#e9ecef';
-                }
-            });
-            
-            return isValid;
-        }
-        
-        // Add input animations
-        document.querySelectorAll('.auth-input').forEach(input => {
-            input.addEventListener('focus', () => {
-                input.style.transform = 'scale(1.02)';
-            });
-            input.addEventListener('blur', () => {
-                input.style.transform = 'scale(1)';
-            });
+        const response = await fetch("http://127.0.0.1:8000/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password, name: "dummy" })
         });
 
-async function loadLogs() {
-    const email = localStorage.getItem("userEmail");
-    const date = new Date().toISOString().slice(0, 10);
-
-    const response = await fetch(`http://127.0.0.1:8000/logs/${email}/${date}`);
-    const data = await response.json();
-    
-    const cards = document.querySelectorAll(".category-card");
-
-    cards.forEach(card => {
-        const name = card.querySelector(".category-name").textContent;
-        const log = data.logs.find(log => log.category === name);
-
-        if (log) {
-            card.classList.add("logged");
-            card.querySelector(".category-time").textContent = `${Math.floor(log.duration_minutes / 60)}h ${log.duration_minutes % 60}m logged`;
+        if (response.ok) {
+            alert("Login successful!");
+            localStorage.setItem("userEmail", email);
+            showScreen("dashboard");
         } else {
-            card.classList.remove("logged");
-            card.querySelector(".category-time").textContent = "Not logged";
+            const data = await response.json();
+            alert("Login failed: " + data.detail);
         }
-    });
-}
+    }
 
+    async function signup() {
+        const name = document.querySelector('#signup-form input[placeholder="Enter your full name"]').value;
+        const email = document.querySelector('#signup-form input[placeholder="Enter your email"]').value;
+        const password = document.querySelector('#signup-form input[placeholder="Create a password"]').value;
 
+        const response = await fetch("http://127.0.0.1:8000/signup", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, email, password })
+        });
 
-    </script>
+        if (response.ok) {
+            alert("Signup successful! Now login.");
+            showScreen("auth");
+        } else {
+            const data = await response.json();
+            alert("Signup failed: " + data.detail);
+        }
+    }
+
+    function socialLogin(provider) {
+        const btn = event.target;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = `<span>Connecting...</span>`;
+        btn.style.opacity = '0.7';
+
+        setTimeout(() => {
+            btn.innerHTML = `<span>✓ Connected!</span>`;
+            btn.style.borderColor = '#28a745';
+            btn.style.color = '#28a745';
+            setTimeout(() => {
+                showScreen('dashboard');
+                btn.innerHTML = originalText;
+                btn.style.opacity = '1';
+                btn.style.borderColor = '#e9ecef';
+                btn.style.color = provider === 'google' ? '#4285f4' : '#000';
+            }, 1000);
+        }, 1500);
+    }
+
+    function openCategory(categoryName) {
+        const categories = {
+            'sleep': { icon: '😴', title: 'Sleep', desc: 'Log your sleep duration and quality' },
+            'exercise': { icon: '💪', title: 'Physical Exercise', desc: 'Track your workout sessions' },
+            'nutrition': { icon: '🍎', title: 'Nutrition', desc: 'Log your meals and water intake' },
+            'work': { icon: '💼', title: 'Work & Productivity', desc: 'Track your work hours and tasks' },
+            'personal': { icon: '🧴', title: 'Personal Care', desc: 'Log hygiene and self-care activities' },
+            'social': { icon: '👥', title: 'Social & Leisure', desc: 'Time spent with friends and hobbies' },
+            'household': { icon: '🏠', title: 'Household Tasks', desc: 'Cleaning, errands, and maintenance' },
+            'mindfulness': { icon: '🧘', title: 'Mindfulness', desc: 'Meditation and mental well-being' },
+            'transport': { icon: '🚗', title: 'Transportation', desc: 'Commute and travel time' },
+            'learning': { icon: '📚', title: 'Learning', desc: 'Study time and skill development' }
+        };
+
+        const category = categories[categoryName];
+        if (category) {
+            document.getElementById('input-icon').textContent = category.icon;
+            document.getElementById('input-title').textContent = category.title;
+            showScreen('input');
+        }
+    }
+
+    async function saveEntry() {
+        const email = localStorage.getItem("userEmail");
+        const category = document.getElementById('input-title').textContent;
+        const hours = parseInt(document.getElementById('hours').value) || 0;
+        const minutes = parseInt(document.getElementById('minutes').value) || 0;
+        const duration_minutes = hours * 60 + minutes;
+        const notes = document.querySelector('.notes-input').value;
+        const mood = document.querySelector('.mood-emoji.selected')?.textContent;
+        const date = new Date().toISOString().slice(0, 10);
+
+        const response = await fetch("http://127.0.0.1:8000/log", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, category, duration_minutes, notes, mood, date })
+        });
+
+        if (response.ok) {
+            alert("Activity saved!");
+            showScreen("dashboard");
+        } else {
+            const data = await response.json();
+            alert("Error saving entry: " + data.detail);
+        }
+    }
+
+    async function loadLogs() {
+        const email = localStorage.getItem("userEmail");
+        const date = new Date().toISOString().slice(0, 10);
+
+        const response = await fetch(`http://127.0.0.1:8000/logs/${email}/${date}`);
+        const data = await response.json();
+
+        const cards = document.querySelectorAll(".category-card");
+
+        cards.forEach(card => {
+            const name = card.querySelector(".category-name").textContent;
+            const log = data.logs.find(log => log.category === name);
+
+            if (log) {
+                card.classList.add("logged");
+                card.querySelector(".category-time").textContent = `${Math.floor(log.duration_minutes / 60)}h ${log.duration_minutes % 60}m logged`;
+            } else {
+                card.classList.remove("logged");
+                card.querySelector(".category-time").textContent = "Not logged";
+            }
+        });
+    }
+
+    function changeDate(direction) {
+        const dateSpan = document.querySelector('.current-date');
+        if (direction > 0) {
+            dateSpan.textContent = 'Tomorrow, June 17';
+        } else {
+            dateSpan.textContent = 'Yesterday, June 15';
+        }
+    }
+</script>
+
 </body>
 </html>
