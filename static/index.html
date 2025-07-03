@@ -1196,41 +1196,17 @@
     </div>
     
     <script>
-    let currentScreen = 'splash';
-    let selectedMood = 3;
-    let currentAuthTab = 'login';
+let currentScreen = 'splash';
+let selectedMood = 3;
+let currentAuthTab = 'login';
 
-    function showScreen(screenName) {
-        document.querySelectorAll('.screen').forEach(screen => screen.classList.remove('active'));
-        const screenEl = document.getElementById(screenName);
-        if (screenEl) screenEl.classList.add('active');
-
-        // ✅ Fix: tabNav safely handled even if DOM not ready yet
-        let tabNav = document.querySelector('.tab-nav');
-        if (!tabNav) {
-            document.addEventListener("DOMContentLoaded", function () {
-    setTimeout(() => {
-        showScreen("auth");
-    }, 3000);
-});
 function showScreen(screenName) {
     document.querySelectorAll('.screen').forEach(screen => screen.classList.remove('active'));
     const screenEl = document.getElementById(screenName);
     if (screenEl) screenEl.classList.add('active');
 
-    // ✅ Declare once at the top
     let tabNav = document.querySelector('.tab-nav');
-    if (!tabNav) {
-        document.addEventListener("DOMContentLoaded", () => {
-            // ✅ Don't redeclare — just assign
-            tabNav = document.querySelector('.tab-nav');
-            if (screenName === 'dashboard' || screenName === 'trends') {
-                tabNav.style.display = 'flex';
-            } else {
-                tabNav.style.display = 'none';
-            }
-        });
-    } else {
+    if (tabNav) {
         if (screenName === 'dashboard' || screenName === 'trends') {
             tabNav.style.display = 'flex';
         } else {
@@ -1244,154 +1220,162 @@ function showScreen(screenName) {
     }
 }
 
-    function switchAuthTab(tabName) {
-        currentAuthTab = tabName;
-        document.querySelectorAll('.auth-tab').forEach(tab => tab.classList.remove('active'));
-        event.target.classList.add('active');
+// ✅ Splash to login/signup screen
+document.addEventListener("DOMContentLoaded", function () {
+    setTimeout(() => {
+        showScreen("auth");
+    }, 3000);
+});
 
-        document.getElementById('login-form').classList.toggle('hidden', tabName !== 'login');
-        document.getElementById('signup-form').classList.toggle('hidden', tabName !== 'signup');
-    }
+function switchAuthTab(tabName) {
+    currentAuthTab = tabName;
+    document.querySelectorAll('.auth-tab').forEach(tab => tab.classList.remove('active'));
+    event.target.classList.add('active');
 
-    async function login() {
-        const email = document.querySelector('#login-form input[placeholder="Enter your email"]').value;
-        const password = document.querySelector('#login-form input[placeholder="Enter your password"]').value;
+    document.getElementById('login-form').classList.toggle('hidden', tabName !== 'login');
+    document.getElementById('signup-form').classList.toggle('hidden', tabName !== 'signup');
+}
 
-        const response = await fetch("https://daily-tracker-hslo.onrender.com/login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, password, name: "dummy" })
-        });
+async function login() {
+    const email = document.querySelector('#login-form input[placeholder="Enter your email"]').value;
+    const password = document.querySelector('#login-form input[placeholder="Enter your password"]').value;
 
-        if (response.ok) {
-            alert("Login successful!");
-            localStorage.setItem("userEmail", email);
-            showScreen("dashboard");
-        } else {
-            const data = await response.json();
-            alert("Login failed: " + data.detail);
-        }
-    }
+    const response = await fetch("https://daily-tracker-hslo.onrender.com/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, name: "dummy" })
+    });
 
-    async function signup() {
-        const name = document.querySelector('#signup-form input[placeholder="Enter your full name"]').value;
-        const email = document.querySelector('#signup-form input[placeholder="Enter your email"]').value;
-        const password = document.querySelector('#signup-form input[placeholder="Create a password"]').value;
-
-        const response = await fetch("https://daily-tracker-hslo.onrender.com/signup", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name, email, password })
-        });
-
-        if (response.ok) {
-            alert("Signup successful! Now login.");
-            showScreen("auth");
-        } else {
-            const data = await response.json();
-            alert("Signup failed: " + data.detail);
-        }
-    }
-
-    function socialLogin(provider) {
-        const btn = event.target;
-        const originalText = btn.innerHTML;
-        btn.innerHTML = `<span>Connecting...</span>`;
-        btn.style.opacity = '0.7';
-
-        setTimeout(() => {
-            btn.innerHTML = `<span>✓ Connected!</span>`;
-            btn.style.borderColor = '#28a745';
-            btn.style.color = '#28a745';
-            setTimeout(() => {
-                showScreen('dashboard');
-                btn.innerHTML = originalText;
-                btn.style.opacity = '1';
-                btn.style.borderColor = '#e9ecef';
-                btn.style.color = provider === 'google' ? '#4285f4' : '#000';
-            }, 1000);
-        }, 1500);
-    }
-
-    function openCategory(categoryName) {
-        const categories = {
-            'sleep': { icon: '😴', title: 'Sleep', desc: 'Log your sleep duration and quality' },
-            'exercise': { icon: '💪', title: 'Physical Exercise', desc: 'Track your workout sessions' },
-            'nutrition': { icon: '🍎', title: 'Nutrition', desc: 'Log your meals and water intake' },
-            'work': { icon: '💼', title: 'Work & Productivity', desc: 'Track your work hours and tasks' },
-            'personal': { icon: '🧴', title: 'Personal Care', desc: 'Log hygiene and self-care activities' },
-            'social': { icon: '👥', title: 'Social & Leisure', desc: 'Time spent with friends and hobbies' },
-            'household': { icon: '🏠', title: 'Household Tasks', desc: 'Cleaning, errands, and maintenance' },
-            'mindfulness': { icon: '🧘', title: 'Mindfulness', desc: 'Meditation and mental well-being' },
-            'transport': { icon: '🚗', title: 'Transportation', desc: 'Commute and travel time' },
-            'learning': { icon: '📚', title: 'Learning', desc: 'Study time and skill development' }
-        };
-
-        const category = categories[categoryName];
-        if (category) {
-            document.getElementById('input-icon').textContent = category.icon;
-            document.getElementById('input-title').textContent = category.title;
-            showScreen('input');
-        }
-    }
-
-    async function saveEntry() {
-        const email = localStorage.getItem("userEmail");
-        const category = document.getElementById('input-title').textContent;
-        const hours = parseInt(document.getElementById('hours').value) || 0;
-        const minutes = parseInt(document.getElementById('minutes').value) || 0;
-        const duration_minutes = hours * 60 + minutes;
-        const notes = document.querySelector('.notes-input').value;
-        const mood = document.querySelector('.mood-emoji.selected')?.textContent;
-        const date = new Date().toISOString().slice(0, 10);
-
-        const response = await fetch("https://daily-tracker-hslo.onrender.com/log", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, category, duration_minutes, notes, mood, date })
-        });
-
-        if (response.ok) {
-            alert("Activity saved!");
-            showScreen("dashboard");
-        } else {
-            const data = await response.json();
-            alert("Error saving entry: " + data.detail);
-        }
-    }
-
-    async function loadLogs() {
-        const email = localStorage.getItem("userEmail");
-        const date = new Date().toISOString().slice(0, 10);
-
-        const response = await fetch(`https://daily-tracker-hslo.onrender.com/logs/${email}/${date}`);
+    if (response.ok) {
+        alert("Login successful!");
+        localStorage.setItem("userEmail", email);
+        showScreen("dashboard");
+    } else {
         const data = await response.json();
-
-        const cards = document.querySelectorAll(".category-card");
-
-        cards.forEach(card => {
-            const name = card.querySelector(".category-name").textContent;
-            const log = data.logs.find(log => log.category === name);
-
-            if (log) {
-                card.classList.add("logged");
-                card.querySelector(".category-time").textContent = `${Math.floor(log.duration_minutes / 60)}h ${log.duration_minutes % 60}m logged`;
-            } else {
-                card.classList.remove("logged");
-                card.querySelector(".category-time").textContent = "Not logged";
-            }
-        });
+        alert("Login failed: " + data.detail);
     }
+}
 
-    function changeDate(direction) {
-        const dateSpan = document.querySelector('.current-date');
-        if (direction > 0) {
-            dateSpan.textContent = 'Tomorrow, June 17';
+async function signup() {
+    const name = document.querySelector('#signup-form input[placeholder="Enter your full name"]').value;
+    const email = document.querySelector('#signup-form input[placeholder="Enter your email"]').value;
+    const password = document.querySelector('#signup-form input[placeholder="Create a password"]').value;
+
+    const response = await fetch("https://daily-tracker-hslo.onrender.com/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password })
+    });
+
+    if (response.ok) {
+        alert("Signup successful! Now login.");
+        showScreen("auth");
+    } else {
+        const data = await response.json();
+        alert("Signup failed: " + data.detail);
+    }
+}
+
+function socialLogin(provider) {
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = `<span>Connecting...</span>`;
+    btn.style.opacity = '0.7';
+
+    setTimeout(() => {
+        btn.innerHTML = `<span>✓ Connected!</span>`;
+        btn.style.borderColor = '#28a745';
+        btn.style.color = '#28a745';
+        setTimeout(() => {
+            showScreen('dashboard');
+            btn.innerHTML = originalText;
+            btn.style.opacity = '1';
+            btn.style.borderColor = '#e9ecef';
+            btn.style.color = provider === 'google' ? '#4285f4' : '#000';
+        }, 1000);
+    }, 1500);
+}
+
+function openCategory(categoryName) {
+    const categories = {
+        'sleep': { icon: '😴', title: 'Sleep', desc: 'Log your sleep duration and quality' },
+        'exercise': { icon: '💪', title: 'Physical Exercise', desc: 'Track your workout sessions' },
+        'nutrition': { icon: '🍎', title: 'Nutrition', desc: 'Log your meals and water intake' },
+        'work': { icon: '💼', title: 'Work & Productivity', desc: 'Track your work hours and tasks' },
+        'personal': { icon: '🧴', title: 'Personal Care', desc: 'Log hygiene and self-care activities' },
+        'social': { icon: '👥', title: 'Social & Leisure', desc: 'Time spent with friends and hobbies' },
+        'household': { icon: '🏠', title: 'Household Tasks', desc: 'Cleaning, errands, and maintenance' },
+        'mindfulness': { icon: '🧘', title: 'Mindfulness', desc: 'Meditation and mental well-being' },
+        'transport': { icon: '🚗', title: 'Transportation', desc: 'Commute and travel time' },
+        'learning': { icon: '📚', title: 'Learning', desc: 'Study time and skill development' }
+    };
+
+    const category = categories[categoryName];
+    if (category) {
+        document.getElementById('input-icon').textContent = category.icon;
+        document.getElementById('input-title').textContent = category.title;
+        showScreen('input');
+    }
+}
+
+async function saveEntry() {
+    const email = localStorage.getItem("userEmail");
+    const category = document.getElementById('input-title').textContent;
+    const hours = parseInt(document.getElementById('hours').value) || 0;
+    const minutes = parseInt(document.getElementById('minutes').value) || 0;
+    const duration_minutes = hours * 60 + minutes;
+    const notes = document.querySelector('.notes-input').value;
+    const mood = document.querySelector('.mood-emoji.selected')?.textContent;
+    const date = new Date().toISOString().slice(0, 10);
+
+    const response = await fetch("https://daily-tracker-hslo.onrender.com/log", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, category, duration_minutes, notes, mood, date })
+    });
+
+    if (response.ok) {
+        alert("Activity saved!");
+        showScreen("dashboard");
+    } else {
+        const data = await response.json();
+        alert("Error saving entry: " + data.detail);
+    }
+}
+
+async function loadLogs() {
+    const email = localStorage.getItem("userEmail");
+    const date = new Date().toISOString().slice(0, 10);
+
+    const response = await fetch(`https://daily-tracker-hslo.onrender.com/logs/${email}/${date}`);
+    const data = await response.json();
+
+    const cards = document.querySelectorAll(".category-card");
+
+    cards.forEach(card => {
+        const name = card.querySelector(".category-name").textContent;
+        const log = data.logs.find(log => log.category === name);
+
+        if (log) {
+            card.classList.add("logged");
+            card.querySelector(".category-time").textContent = `${Math.floor(log.duration_minutes / 60)}h ${log.duration_minutes % 60}m logged`;
         } else {
-            dateSpan.textContent = 'Yesterday, June 15';
+            card.classList.remove("logged");
+            card.querySelector(".category-time").textContent = "Not logged";
         }
+    });
+}
+
+function changeDate(direction) {
+    const dateSpan = document.querySelector('.current-date');
+    if (direction > 0) {
+        dateSpan.textContent = 'Tomorrow, June 17';
+    } else {
+        dateSpan.textContent = 'Yesterday, June 15';
     }
+}
 </script>
+
 
 </body>
 </html>
