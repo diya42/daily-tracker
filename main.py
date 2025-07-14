@@ -1015,7 +1015,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 async def serve_index():
     return FileResponse("static/index.html")
 
-# Alias: Make /login work (used by your frontend)
+# Alias: to make /login work 
 @app.post("/login")
 async def login_alias(user: UserLogin):
     return await login(user)
