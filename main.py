@@ -14,6 +14,8 @@ import json
 import re
 from fastapi import status
 from pydantic import validator
+from fastapi.staticfiles import StaticFiles
+
 
 # Initialize FastAPI app
 app = FastAPI(title="Daily Tracker API", version="1.0.0")
