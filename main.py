@@ -1007,6 +1007,18 @@ async def get_trends(user_id: int = Depends(verify_token)):
         
         return {"trends": trends}
 
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+@app.get("/")
+async def serve_index():
+    return FileResponse("static/index.html")
+
+# Alias: Make /login work (used by your frontend)
+@app.post("/login")
+async def login_alias(user: UserLogin):
+    return await login(user)
+
+
 # Run the application
 if __name__ == "__main__":
     import uvicorn
